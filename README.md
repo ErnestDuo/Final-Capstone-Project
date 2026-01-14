@@ -1,12 +1,12 @@
 # Final-Capstone-Project
-# 🛡️ Cisco Ethical Hacker Capstone – Commands & Remediation Guide
+#  Cisco Ethical Hacker Capstone – Commands & Remediation Guide
 
 This repository documents the **Final Capstone Activity** from the Cisco Ethical Hacker course.  
 It covers four penetration testing challenges, the exact commands used, and remediation steps.
 
 ---
 
-## 📌 Lab Environment
+##  Lab Environment
 
 | Challenge | Hostname       | IP Address       |
 |-----------|----------------|------------------|
@@ -17,12 +17,12 @@ It covers four penetration testing challenges, the exact commands used, and reme
 
 ---
 
-## 🔥 Challenge 1 – SQL Injection (DVWA)
+##  ✅Challenge 1 – SQL Injection (DVWA)
 
 ### Objective
 Exploit a SQL Injection vulnerability to identify the database name, extract user credentials, and gain server access.
 
-### 💻 Exploitation Steps
+###  Exploitation Steps
 1. Database Enumeration Identify the database name using the DATABASE() function.
 
 ### SQL
@@ -57,11 +57,11 @@ cat my_passwords.txt
 Flag Found: 8748wf83.
 ```
 
-## 📂 Challenge 2 – Directory Listing
+## ✅ Challenge 2 – Directory Listing
 ### Objective
 - Enumerate a web server to find sensitive directories and files exposed via misconfiguration.
 
-### 💻 Exploitation Steps
+###  Exploitation Steps
 1. Nikto Vulnerability Scan
 
 Bash
@@ -71,18 +71,18 @@ Bash
 
 2. Flag Retrieval Browsing to the identified directory reveals sensitive configuration files.
 
-### 🛡️ Remediation
+###  Remediation
 - Disable Directory Indexing: Set Options -Indexes in the Apache configuration to prevent users from browsing folder contents.
 
 - Restrict Access: Move configuration files outside the web root or restrict access via .htaccess.
 
 
 
-## 📦 Challenge 3 – SMB Enumeration
+## ✅ Challenge 3 – SMB Enumeration
 ### Objective
 - Identify open SMB ports and enumerate shares on the network.
 
-### 💻 Exploitation Steps
+###  Exploitation Steps
 1. Network Scanning with Nmap
 
 Bash
@@ -99,11 +99,11 @@ Bash
 
 * Segment networks to limit exposure.
 
-## Challenge 4 – Packet Capture Analysis
+## ✅Challenge 4 – Packet Capture Analysis
 ### Objective
 - Analyze a network capture to intercept sensitive data transmitted in cleartext.
 
-### 💻 Analysis Steps
+###  Analysis Steps
 1. Wireshark Inspection
 
 - Open SA.pcap in Wireshark.
